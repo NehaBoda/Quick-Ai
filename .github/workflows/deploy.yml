@@ -9,7 +9,6 @@ jobs:
 deploy:
 runs-on: ubuntu-latest
 
-```
 steps:
 
 # 1. Checkout code
@@ -43,4 +42,4 @@ steps:
       docker stop quickai || true
       docker rm quickai || true
       docker run -d -p 80:3000 --name quickai ${{ secrets.DOCKER_USERNAME }}/quickai:latest
-```
+      
