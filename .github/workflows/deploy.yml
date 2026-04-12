@@ -25,11 +25,21 @@ jobs:
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/quickai:latest .
 
-      # 4. Push Image
+      # 4. Push Docker Image
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/quickai:latest
 
-      # 5. Deploy to VM via SSH
+      # 5. Copy .env file to VM
+      - name: Copy .env file to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "server/.env"
+          target: "/home/${{ secrets.VM_USER }}/.env"
+
+      # 6. Deploy to VM via SSH
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -40,4 +50,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/quickai:latest
             docker stop quickai || true
             docker rm quickai || true
-            docker run -d -p 80:3000 --name quickai ${{ secrets.DOCKER_USERNAME }}/quickai:latest
+            docker run -d -p 80:3000 \
+              --name quickai \
+              --env-file /home/${{ secrets.VM_USER }}/.env \
+              ${{ secrets.DOCKER_USERNAME }}/quickai:latest
